@@ -56,6 +56,7 @@ def get_pages_number(url: str) -> int:
         pages_number = round(int(jobs_number)/15)
         return int(pages_number)
     except:
+        print('error')
         return None
 
 # method to replace the last number in the url with the new page number
@@ -83,7 +84,7 @@ def get_expired_at(created_at: datetime) -> datetime:
 
 # method to get the job info
 def get_job_info(job: BeautifulSoup) -> schemas.JobCreate:
-    # try:
+    try:
         job_title = job.find('h2', class_='css-m604qf').text
         job_company = job.find('a', class_='css-17s97q8').text.rstrip(' -')
         job_location = job.find('span', class_='css-5wys0k').text
@@ -99,22 +100,24 @@ def get_job_info(job: BeautifulSoup) -> schemas.JobCreate:
 
         result = {'title': job_title, 'company': job_company, 'location': job_location,'type': job_type, 'skills': job_skills,  'link': 'https://wuzzuf.net'+job_link ,'created_at': created_at, 'expired_at': expired_at}
         return result
-    # except:
+    except:
         return None
 
 # method to write the job info to the database
-def write_to_db(job_info: schemas.JobCreate ,db: Session = Depends(get_db)):
+def write_to_db(job_info: schemas.JobCreate ,db: Session):
     # Connect to the database
     query = db.query(models.Job).filter(models.Job.link == job_info['link']).first()
-    if query == None:
+    if query is None:
         new_job = models.Job(**job_info)
         db.add(new_job)
         db.commit()
+        db.refresh(new_job)
+
+        
 
 
 
-
-def get_jobs_from_wuzzuf_toDb(url:str ,db: Session = Depends(get_db)):
+def get_jobs_from_wuzzuf_toDb(url:str ,db: Session):
     all_jobs = []
     search_url = url
     # get the right number of pages

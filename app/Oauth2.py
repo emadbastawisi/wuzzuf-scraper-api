@@ -31,6 +31,7 @@ def verify_access_token(token: str , credentials_exeption):
         raise credentials_exeption
     
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
+    print(token)
     credentials_exeption = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
