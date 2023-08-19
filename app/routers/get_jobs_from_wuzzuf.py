@@ -1,11 +1,8 @@
 from datetime import datetime, timedelta
-import json
 import urllib.request, urllib.parse, urllib.error
 from bs4 import BeautifulSoup
 import ssl
 import re
-from fastapi import Depends ,status
-from ..database import get_db
 from sqlalchemy.orm import Session
 from .. import models ,schemas 
 
