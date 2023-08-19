@@ -38,7 +38,6 @@ def get_jobs(request: str, db: Session = Depends(get_db), current_user: int = De
     # Perform a database query to find jobs that have any of the keywords in their skills or title
     keyword_results = db.query(models.Job).filter(or_(*[models.Job.skills.ilike(f'%{keyword}%') for keyword in list_of_keywords], *[
         models.Job.title.ilike(f'%{keyword}%') for keyword in list_of_keywords]))
-    print(keyword_results)
     keyword_results = keyword_results.all()
 
     # Return the keyword results

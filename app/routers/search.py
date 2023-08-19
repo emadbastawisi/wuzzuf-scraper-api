@@ -17,7 +17,6 @@ def get_search_keywords(db: Session = Depends(get_db), current_user: int = Depen
     user_query = db.query(models.User_Keyword).filter(
         models.User_Keyword.user_id == current_user.id).first()
     if user_query:
-        print(user_query.keywords)
         return user_query.keywords
     else:
         raise HTTPException(
@@ -28,7 +27,6 @@ def get_search_keywords(db: Session = Depends(get_db), current_user: int = Depen
 
 @router.post('/', )
 def add_search_keyword(request: schemas.keywords, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
-    print(request)
     user_query = db.query(models.User_Keyword).filter(
         models.User_Keyword.user_id == current_user.id).first()
     if user_query:
@@ -52,40 +50,24 @@ def add_search_keyword(request: schemas.keywords, db: Session = Depends(get_db),
 # delete search_keywords
 
 
-@router.patch('/', status_code=status.HTTP_204_NO_CONTENT)
-def delete_search_keyword(request: schemas.keywords, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
+@router.patch('/{request}', status_code=status.HTTP_200_OK )
+def delete_search_keyword(request: str, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     user_query = db.query(models.User_Keyword).filter(
         models.User_Keyword.user_id == current_user.id).first()
-    if user_query:
-        list_of_keywords = request.keywords.split(',')
-        for keyword in list_of_keywords:
-            if keyword in user_query.keywords.split(','):
-                new_keywords = utils.remove_word(keyword, user_query.keywords)
-                if new_keywords == '':
-                    db.query(models.User_Keyword).filter(
-                        models.User_Keyword.user_id == current_user.id).delete(synchronize_session=False)
-                db.query(models.User_Keyword).filter(
-                    models.User_Keyword.user_id == current_user.id).update({models.User_Keyword.keywords: new_keywords})
-                db.commit()
-            else:
-                raise HTTPException(
-                    status_code=404, detail="keyword not found")
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-    else:
+    if not user_query:
         raise HTTPException(
             status_code=404, detail="user has no search keywords")
-    #     if user_query.keywords.find(search_keyword.search_keyword) != -1:
-    #         new_keywords = utils.remove_word(
-    #             search_keyword.search_keyword, user_query.keywords)
-    #         if new_keywords == '':
-    #             db.query(models.User_Keyword).filter(
-    #                 models.User_Keyword.user_id == current_user.id).delete(synchronize_session=False)
-    #         db.query(models.User_Keyword).filter(models.User_Keyword.user_id ==
-    #                                              current_user.id).update({models.User_Keyword.keywords: new_keywords})
-    #         db.commit()
-    #         db.refresh(user_query)
-    #         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    #     else:
-    #         raise HTTPException(status_code=400, detail="keyword not found")
-    # else:
-    #     raise HTTPException(status_code=400, detail="keyword not found")
+    list_of_keywords = request.split(',')
+    for keyword in list_of_keywords:
+        if keyword not in user_query.keywords.split(','):
+            continue
+        new_keywords = utils.remove_word(keyword, user_query.keywords)
+        if new_keywords == '':
+            db.query(models.User_Keyword).filter(
+                models.User_Keyword.user_id == current_user.id).delete(synchronize_session=False)
+        db.query(models.User_Keyword).filter(
+            models.User_Keyword.user_id == current_user.id).update({models.User_Keyword.keywords: new_keywords})
+        db.commit()
+    return user_query.keywords
+
+
