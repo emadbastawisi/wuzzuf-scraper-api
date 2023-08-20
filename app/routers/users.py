@@ -27,6 +27,8 @@ async def get_users(db: Session = Depends(get_db)):
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    if user.email == '' or user.username == '' or user.password == '':
+        raise HTTPException(status_code=400, detail="Invalid data")
     existing_user = db.query(models.User).filter(
         or_(
             models.User.email == user.email,
