@@ -26,9 +26,8 @@ def get_search_keywords(db: Session = Depends(get_db), current_user: int = Depen
 # add search_keywords
 
 
-@router.post('/', )
+@router.post('/', status_code=status.HTTP_201_CREATED)
 def add_search_keyword(request: schemas.keywords, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
-    print(request)
     user_query = db.query(models.User_Keyword).filter(
         models.User_Keyword.user_id == current_user.id).first()
     if user_query:
@@ -37,7 +36,8 @@ def add_search_keyword(request: schemas.keywords, db: Session = Depends(get_db),
                 status_code=400, detail="keyword already exists")
         else:
             new_keywords = user_query.keywords + ',' + request.keywords
-            db.query(models.User_Keyword).filter(models.User_Keyword.user_id == current_user.id).update({models.User_Keyword.keywords: new_keywords})
+            db.query(models.User_Keyword).filter(models.User_Keyword.user_id ==
+                                                 current_user.id).update({models.User_Keyword.keywords: new_keywords})
             db.commit()
             db.refresh(user_query)
         return user_query.keywords
@@ -52,7 +52,7 @@ def add_search_keyword(request: schemas.keywords, db: Session = Depends(get_db),
 # delete search_keywords
 
 
-@router.patch('/', status_code=status.HTTP_204_NO_CONTENT)
+@router.patch('/', status_code=status.HTTP_200_OK)
 def delete_search_keyword(request: schemas.keywords, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     user_query = db.query(models.User_Keyword).filter(
         models.User_Keyword.user_id == current_user.id).first()
@@ -67,25 +67,11 @@ def delete_search_keyword(request: schemas.keywords, db: Session = Depends(get_d
                 db.query(models.User_Keyword).filter(
                     models.User_Keyword.user_id == current_user.id).update({models.User_Keyword.keywords: new_keywords})
                 db.commit()
+                db.refresh(user_query)
             else:
                 raise HTTPException(
                     status_code=404, detail="keyword not found")
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
+        return user_query.keywords
     else:
         raise HTTPException(
             status_code=404, detail="user has no search keywords")
-    #     if user_query.keywords.find(search_keyword.search_keyword) != -1:
-    #         new_keywords = utils.remove_word(
-    #             search_keyword.search_keyword, user_query.keywords)
-    #         if new_keywords == '':
-    #             db.query(models.User_Keyword).filter(
-    #                 models.User_Keyword.user_id == current_user.id).delete(synchronize_session=False)
-    #         db.query(models.User_Keyword).filter(models.User_Keyword.user_id ==
-    #                                              current_user.id).update({models.User_Keyword.keywords: new_keywords})
-    #         db.commit()
-    #         db.refresh(user_query)
-    #         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    #     else:
-    #         raise HTTPException(status_code=400, detail="keyword not found")
-    # else:
-    #     raise HTTPException(status_code=400, detail="keyword not found")
