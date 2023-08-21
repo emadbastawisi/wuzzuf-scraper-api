@@ -17,7 +17,6 @@ def get_search_keywords(db: Session = Depends(get_db), current_user: int = Depen
     user_query = db.query(models.User_Keyword).filter(
         models.User_Keyword.user_id == current_user.id).first()
     if user_query:
-        print(user_query.keywords)
         return user_query.keywords
     else:
         raise HTTPException(
