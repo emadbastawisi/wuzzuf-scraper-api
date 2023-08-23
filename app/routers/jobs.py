@@ -19,8 +19,7 @@ router = APIRouter(
 def scrap_jobs(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     try:
         # Call the function get_jobs_from_wuzzuf_toDb with the provided URL.
-        get_jobs_from_wuzzuf_toDb(
-            'https://wuzzuf.net/search/jobs/?filters%5Bpost_date%5D%5B0%5D=within_24_hours&start=0', db)
+        get_jobs_from_wuzzuf_toDb('within_24_hours', db)
 
         # Return the HTTP status code 201 Created indicating that the request was successful.
         return status.HTTP_201_CREATED

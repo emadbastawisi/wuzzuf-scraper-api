@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 from bs4 import BeautifulSoup
 import ssl
 import re
 from sqlalchemy.orm import Session
-from .. import models ,schemas 
+from .. import models, schemas
 
 
 # import schedule
@@ -18,17 +20,21 @@ ctx.verify_mode = ssl.CERT_NONE
 user_agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'
 headers = {'User-Agent': user_agent}
 
-url='https://wuzzuf.net/search/jobs/?filters%5Bpost_date%5D%5B0%5D=within_1_week&start=0'
+url = 'https://wuzzuf.net/search/jobs/?filters%5Bpost_date%5D%5B0%5D=within_1_week&start=0'
 
 # method to create the search url
-def create_search_url(search_keyword, time_range='none'):
-    if time_range == 'past_24_hours':
-        search_url = 'https://wuzzuf.net/search/jobs/?a=navbl%7Cspbl&filters%5Bpost_date%5D%5B0%5D=within_24_hours&q={}&start=0'.format(search_keyword.replace(' ', '+'))
-    else:
-        search_url = 'https://wuzzuf.net/search/jobs/?a=navbl%7Cspbl&q={}&start=0'.format(search_keyword.replace(' ', '+'))
+# search_keyword can be any string and time_range can be 'within_24_hours' or 'within_1_week' or 'within_1_month'
+# they have empety default values
+
+
+def create_search_url(search_keyword='', time_range=''):
+    search_url = 'https://wuzzuf.net/search/jobs/?&filters%5Bpost_date%5D%5B0%5D={}&q={}&start=0'.format(
+        time_range, search_keyword.replace(' ', '+'))
     return search_url
 
 # method to get the html from the search url
+
+
 def get_html(url: str) -> str:
     req = urllib.request.Request(url=url, headers=headers)
     return urllib.request.urlopen(req, context=ctx).read()
@@ -44,12 +50,13 @@ def get_jobs(soup: BeautifulSoup) -> list:
     return soup.find_all('div', class_='css-1gatmva e1v1l3u10')
 
 
-# get jobs number to find the number of pages   
+# get jobs number to find the number of pages
 def get_pages_number(url: str) -> int:
     html = get_html(url)
     soup = parse_html(html)
     try:
-        jobs_number = soup.find('span', class_="css-xkh9ud").find('strong').text
+        jobs_number = soup.find(
+            'span', class_="css-xkh9ud").find('strong').text
         pages_number = round(int(jobs_number)/15)
         return int(pages_number)
     except:
@@ -57,6 +64,8 @@ def get_pages_number(url: str) -> int:
         return None
 
 # method to replace the last number in the url with the new page number
+
+
 def replace_page_number(url: str, new_number: int) -> str:
     pattern = r'start=\d+'
     return re.sub(pattern, 'start={}'.format(new_number), url)
@@ -76,10 +85,12 @@ def get_created_at(string: str) -> str:
 
 # method to get the expired_at date by adding 7 days to the created_at date
 def get_expired_at(created_at: datetime) -> datetime:
-    now = created_at + timedelta(days= 7)
+    now = created_at + timedelta(days=7)
     return now
 
 # method to get the job info
+
+
 def get_job_info(job: BeautifulSoup) -> schemas.JobCreate:
     try:
         job_title = job.find('h2', class_='css-m604qf').text
@@ -90,33 +101,36 @@ def get_job_info(job: BeautifulSoup) -> schemas.JobCreate:
         job_link = job.find('a', class_='css-o171kl')['href']
         # some jobs have a different class name for the posted date
         try:
-            created_at = get_created_at(job.find('div', class_='css-4c4ojb').text)
+            created_at = get_created_at(
+                job.find('div', class_='css-4c4ojb').text)
         except:
-            created_at = get_created_at(job.find('div', class_='css-do6t5g').text)
+            created_at = get_created_at(
+                job.find('div', class_='css-do6t5g').text)
         expired_at = get_expired_at(created_at)
 
-        result = {'title': job_title, 'company': job_company, 'location': job_location,'type': job_type, 'skills': job_skills,  'link': 'https://wuzzuf.net'+job_link ,'created_at': created_at, 'expired_at': expired_at}
+        result = {'title': job_title, 'company': job_company, 'location': job_location, 'type': job_type,
+                  'skills': job_skills,  'link': 'https://wuzzuf.net'+job_link, 'created_at': created_at, 'expired_at': expired_at}
         return result
     except:
         return None
 
 # method to write the job info to the database
-def write_to_db(job_info: schemas.JobCreate ,db: Session):
+
+
+def write_to_db(job_info: schemas.JobCreate, db: Session):
     # Connect to the database
-    query = db.query(models.Job).filter(models.Job.link == job_info['link']).first()
+    query = db.query(models.Job).filter(
+        models.Job.link == job_info['link']).first()
     if query is None:
         new_job = models.Job(**job_info)
         db.add(new_job)
         db.commit()
         db.refresh(new_job)
 
-        
 
-
-
-def get_jobs_from_wuzzuf_toDb(url:str ,db: Session):
+def get_jobs_from_wuzzuf_toDb(time_range: str, db: Session):
     all_jobs = []
-    search_url = url
+    search_url = create_search_url('', time_range)
     # get the right number of pages
     pages_number = get_pages_number(search_url)
     if pages_number == None:
@@ -144,7 +158,6 @@ def get_jobs_from_wuzzuf_toDb(url:str ,db: Session):
 
             # write the job info to a txt file
             if job_info:
-                write_to_db(job_info,db)
+                write_to_db(job_info, db)
                 all_jobs.append(job_info)
-    return  all_jobs
-
+    return all_jobs
