@@ -62,6 +62,11 @@ class JobOut(Job):
 class Url(BaseModel):
     url: str
 
+
+class Password(BaseModel):
+    password: str
+
+
 # class PostBase(BaseModel):
 #     title: str
 #     content: str

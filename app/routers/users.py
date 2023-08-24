@@ -1,7 +1,7 @@
 from fastapi import Depends, Response, status, HTTPException, APIRouter
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
-from .. import models, schemas, utils , Oauth2
+from .. import models, schemas, utils, Oauth2
 from ..database import engine, get_db
 
 router = APIRouter(
@@ -53,18 +53,6 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
     return new_user
 
-# get a single user
-
-
-# @router.get('/{user_id}', response_model=schemas.UserOut)
-# def get_user(user_id: int, db: Session = Depends(get_db)):
-#     user = db.get(models.User, user_id)
-#     if not user:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return user
-
-# delete a user
-
 
 @router.delete('/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
@@ -98,8 +86,10 @@ def get_user(email: str, db: Session = Depends(get_db)):
         return True
     return False
 
-# method to get currnet user 
-@router.get('/current' , response_model=schemas.UserOut )
+# method to get currnet user
+
+
+@router.get('/current', response_model=schemas.UserOut)
 def get_current_user(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     print(current_user)
     user = db.query(models.User).filter(
@@ -107,3 +97,18 @@ def get_current_user(db: Session = Depends(get_db), current_user: int = Depends(
     if not user:
         return False
     return user
+
+# update user password
+
+
+@router.patch('/password', status_code=status.HTTP_200_OK)
+def update_password(password: schemas.Password, db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
+    user = db.query(models.User).filter(
+        models.User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.id != current_user.id:
+        raise HTTPException(status_code=401, detail="Not authorized")
+    user.password = utils.hash(password.password)
+    db.commit()
+    return Response(status_code=status.HTTP_200_OK)

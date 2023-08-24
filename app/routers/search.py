@@ -63,10 +63,13 @@ def delete_search_keyword(request: schemas.keywords, db: Session = Depends(get_d
                 if new_keywords == '':
                     db.query(models.User_Keyword).filter(
                         models.User_Keyword.user_id == current_user.id).delete(synchronize_session=False)
-                db.query(models.User_Keyword).filter(
-                    models.User_Keyword.user_id == current_user.id).update({models.User_Keyword.keywords: new_keywords})
-                db.commit()
-                db.refresh(user_query)
+                    db.commit()
+                    return Response(status_code=status.HTTP_204_NO_CONTENT)
+                else:
+                    db.query(models.User_Keyword).filter(
+                        models.User_Keyword.user_id == current_user.id).update({models.User_Keyword.keywords: new_keywords})
+                    db.commit()
+                    db.refresh(user_query)
             else:
                 raise HTTPException(
                     status_code=404, detail="keyword not found")
