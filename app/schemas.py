@@ -89,9 +89,9 @@ class Token(BaseModel):
 
 
 class LoginOut(BaseModel):
-    username: str
     access_token: str
     token_type: str
+    current_user: UserOut
 
 
 class TokenData(BaseModel):

@@ -1,7 +1,7 @@
 from fastapi import Depends, Response, status, HTTPException, APIRouter
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
-from .. import models, schemas, utils
+from .. import models, schemas, utils , Oauth2
 from ..database import engine, get_db
 
 router = APIRouter(
@@ -56,12 +56,12 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 # get a single user
 
 
-@router.get('/{user_id}', response_model=schemas.UserOut)
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.get(models.User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+# @router.get('/{user_id}', response_model=schemas.UserOut)
+# def get_user(user_id: int, db: Session = Depends(get_db)):
+#     user = db.get(models.User, user_id)
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     return user
 
 # delete a user
 
@@ -97,3 +97,13 @@ def get_user(email: str, db: Session = Depends(get_db)):
     if not user:
         return True
     return False
+
+# method to get currnet user 
+@router.get('/current' , response_model=schemas.UserOut )
+def get_current_user(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
+    print(current_user)
+    user = db.query(models.User).filter(
+        models.User.id == current_user.id).first()
+    if not user:
+        return False
+    return user

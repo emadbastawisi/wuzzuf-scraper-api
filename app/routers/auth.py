@@ -12,9 +12,9 @@ def login(request: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(
         models.User.email == request.username).first()
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=f'Invalid Credentials')
+            status_code=status.HTTP_403_FORBIDDEN, detail=f'Email does not exist')
     if not utils.verify(request.password, user.password):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=f'Invalid Credentialsd')
+            status_code=status.HTTP_403_FORBIDDEN, detail=f'Password is incorrect')
     access_token = Oauth2.create_access_token(data={"sub": str(user.id)})
-    return {"username": user.username, "access_token": access_token, "token_type": "bearer"}
+    return {"current_user": user, "access_token": access_token, "token_type": "bearer"}
