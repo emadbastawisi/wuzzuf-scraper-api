@@ -1,43 +1,105 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr, conint
+from pydantic import BaseModel, EmailStr
+from sqlalchemy import LargeBinary
+
+
+# user section
+
+class UserPersonalInfo(BaseModel):
+    middel_name: Optional[str]
+    birthdate: date
+    gender: str
+    nationality: str
+    marital_status:  Optional[str]
+    military_status: Optional[str]
+    driving_license: Optional[str]
+    address: str
+    phone: str
+
+
+class UserCareerInterests(BaseModel):
+    career_level: str
+    job_types: str
+    job_titels: str
+    job_categories: str
+    min_salary: str
+    hide_min_salary: Optional[bool]
+    perfered_job_location: Optional[str]
+    current_job_search_status: Optional[str]
+
+
+class UserCv(BaseModel):
+    cv_name: str
+    cv_file: LargeBinary
+
+    class Config():
+        arbitrary_types_allowed = True
+
+
+class UserImg(BaseModel):
+    img_name: str
+    img_file: LargeBinary
+
+    class Config():
+        arbitrary_types_allowed = True
 
 
 class User(BaseModel):
-    username: str
+    first_name: str
+    last_name: str
     email: EmailStr
+
+
+class UserCreateIn(User):
     password: str
-
-
-class UserCreate(User):
     pass
 
 
-class UserOut(BaseModel):
-    id: int
-    username: str
-    email: EmailStr
+class UserCreateOut(User):
     created_at: datetime
 
     class Config():
         from_attributes = True
 
 
-class login(BaseModel):
-    email_or_username: str
-    password: str
+class UserOut(User):
+    created_at: datetime
+    img: Optional[UserImg]
+    cv: Optional[UserCv]
+    personal_info: Optional[UserPersonalInfo]
+    career_interests: Optional[UserCareerInterests]
+
+    class Config():
+        from_attributes = True
 
 
-class keywords(BaseModel):
-    keywords: str
+class CurrentUserOut(User):
+    img: Optional[UserImg]
+
+    class Config():
+        from_attributes = True
+
+# auth section
 
 
-class Out_Search_Keyword(BaseModel):
-    user_id: int
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
     id: int
-    keywords: str
 
 
+class LoginOut(Token):
+    current_user: CurrentUserOut
+
+    class Config():
+        from_attributes = True
+
+
+# job section
 class Job(BaseModel):
     title: str
     company: str
@@ -58,6 +120,18 @@ class JobOut(Job):
     class Config():
         from_attributes = True
 
+# keywords section
+
+
+class keywords(BaseModel):
+    keywords: str
+
+
+class Out_Search_Keyword(BaseModel):
+    user_id: int
+    id: int
+    keywords: str
+
 
 class Url(BaseModel):
     url: str
@@ -65,43 +139,3 @@ class Url(BaseModel):
 
 class Password(BaseModel):
     password: str
-
-
-# class PostBase(BaseModel):
-#     title: str
-#     content: str
-#     published: bool = True
-
-# class PostCreate(PostBase):
-#     pass
-
-# class Post(PostBase):
-#     id: int
-#     created_at: datetime
-#     owner_id: int
-#     owner: UserOut
-#     class Config():
-#         from_attributes = True
-
-# class PostOut(BaseModel):
-#     Post : Post
-#     votes: int
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-class LoginOut(BaseModel):
-    access_token: str
-    token_type: str
-    current_user: UserOut
-
-
-class TokenData(BaseModel):
-    id: Optional[str]
-
-# class Vote(BaseModel):
-#     post_id: int
-#     dir: conint(le=1)

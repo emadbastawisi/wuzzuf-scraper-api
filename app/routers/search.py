@@ -12,7 +12,7 @@ router = APIRouter(
 
 
 # get user search_keywords
-@router.get('/')
+@router.get('/', response_model=schemas.Out_Search_Keyword)
 def get_search_keywords(
     db: Session = Depends(get_db),
     current_user: int = Depends(Oauth2.get_current_user)
@@ -25,7 +25,7 @@ def get_search_keywords(
 
         # If the User_Keyword object exists, return the keywords
         if user_query:
-            return user_query.keywords
+            return user_query
         # If the User_Keyword object does not exist, raise an HTTPException
         else:
             raise HTTPException(
