@@ -7,13 +7,13 @@ from sqlalchemy import LargeBinary
 # user section
 
 class UserPersonalInfo(BaseModel):
-    middel_name: Optional[str]
+    middel_name: Optional[str] = None
     birthdate: date
     gender: str
     nationality: str
-    marital_status:  Optional[str]
-    military_status: Optional[str]
-    driving_license: Optional[str]
+    marital_status:  Optional[str] = None
+    military_status: Optional[str] = None
+    driving_license: Optional[str] = None
     address: str
     phone: str
 
@@ -21,12 +21,12 @@ class UserPersonalInfo(BaseModel):
 class UserCareerInterests(BaseModel):
     career_level: str
     job_types: str
-    job_titels: str
+    job_titles: Optional[str] = None
     job_categories: str
     min_salary: str
-    hide_min_salary: Optional[bool]
-    perfered_job_location: Optional[str]
-    current_job_search_status: Optional[str]
+    hide_min_salary: bool
+    perfered_job_location: Optional[str] = None
+    current_job_search_status: Optional[str] = None
 
 
 class UserCv(BaseModel):
@@ -95,14 +95,14 @@ class UserCreateOut(User):
         from_attributes = True
 
 
-class UserOut(User):
+class UserProfile(User):
     id: int
     created_at: datetime
     img: Optional[UserImgOut]
     cv: Optional[UserCvOut]
     personal_info: Optional[UserPersonalInfo]
     career_interests: Optional[UserCareerInterests]
-    work_experience: Optional[UserWorkExperience]
+    work_experience: Optional[List[UserWorkExperience]]
     education: Optional[List[UserEducation]]
     skills: Optional[List[UserSkills]]
     languages: Optional[List[UserLanguage]]
@@ -130,7 +130,7 @@ class TokenData(BaseModel):
 
 
 class LoginOut(Token):
-    current_user: UserOut
+    current_user: CurrentUserOut
 
     class Config():
         from_attributes = True

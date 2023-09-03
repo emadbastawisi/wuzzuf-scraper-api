@@ -35,7 +35,7 @@ class User(Base):
     img = relationship("User_Img", uselist=False)
     personal_info = relationship("User_Personal_Info", uselist=False)
     career_interests = relationship("User_Career_Interests", uselist=False)
-    work_experience = relationship("User_Work_Experience", uselist=False)
+    work_experience = relationship("User_Work_Experience", uselist=True)
     skills = relationship("User_Skills" , uselist=True)
     languages = relationship("User_Language", uselist=True)
     education = relationship("User_Education", uselist=True)
@@ -64,7 +64,7 @@ class User_Career_Interests(Base):
         'users.id', ondelete='cascade'), nullable=False, unique=True)
     career_level = Column(String, nullable=False)
     job_types = Column(String, nullable=False)
-    job_titels = Column(String, nullable=True)
+    job_titles = Column(String, nullable=True)
     job_categories = Column(String, nullable=False)
     min_salary = Column(String, nullable=False)
     hide_min_salary = Column(Boolean, nullable=False, default=False)
@@ -123,7 +123,7 @@ class User_Skills(Base):
     user_id = Column(Integer, ForeignKey(
         'users.id', ondelete='cascade'), nullable=False)
     skill = Column(String, nullable=False)
-    profeciency = Column(String, nullable=False)
+    proficiency = Column(String, nullable=False)
 
 class User_Language(Base):
     __tablename__ = "users_languages"
@@ -131,7 +131,7 @@ class User_Language(Base):
     user_id = Column(Integer, ForeignKey(
         'users.id', ondelete='cascade'), nullable=False)
     language = Column(String, nullable=False)
-    profeciency = Column(String, nullable=False)
+    proficiency = Column(String, nullable=False)
 
 
 

@@ -16,7 +16,7 @@ router = APIRouter(
 # get all users
 
 
-@router.get('/', response_model=list[schemas.UserOut])
+@router.get('/', response_model=list[schemas.UserProfile])
 async def get_users(db: Session = Depends(get_db)):
     # Retrieve all users from the database
     users = db.execute(select(models.User)).scalars().all()
@@ -24,7 +24,6 @@ async def get_users(db: Session = Depends(get_db)):
     return users
 
 # create a new user
-
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.UserCreateOut)
 def create_user(user: schemas.UserCreateIn, db: Session = Depends(get_db)):
@@ -50,46 +49,7 @@ def create_user(user: schemas.UserCreateIn, db: Session = Depends(get_db)):
 
     return new_user
 
-
-@router.delete('/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).get(user_id)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-    db.delete(user)
-    db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-# # check username avilability
-# @router.get('/username/{username}')
-# def get_user(username: str, db: Session = Depends(get_db)):
-#     user = db.query(models.User).filter(
-#         models.User.username == username).first()
-#     if not user:
-#         return True
-#     return False
-
-# check email is already registerd or not
-
-
-@router.get('/email/{email}')
-def get_user(email: str, db: Session = Depends(get_db)):
-    try:
-        user = db.query(models.User).filter(
-            models.User.email == email).first()
-        if not user:
-            return True
-        return False
-    except SQLAlchemyError as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
-
-# method to get currnet user
-
+# get current user
 
 @router.get('/current', response_model=schemas.CurrentUserOut)
 def get_current_user(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
@@ -103,6 +63,21 @@ def get_current_user(db: Session = Depends(get_db), current_user: int = Depends(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
+
+# get user profile
+
+@router.get('/profile', response_model=schemas.UserProfile)
+def get_current_user(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
+    try:
+        user = db.query(models.User).filter(
+            models.User.id == current_user.id).first()
+        if not user:
+            return False
+        return user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )    
 
 
 # update user password
@@ -118,3 +93,75 @@ def update_password(password: schemas.Password, db: Session = Depends(get_db), c
     user.password = utils.hash(password.password)
     db.commit()
     return Response(status_code=status.HTTP_200_OK)
+
+# delete user by id
+
+@router.delete('/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(models.User).get(user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    db.delete(user)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+# get user by id
+
+@router.get('/email/{email}')
+def get_user(email: str, db: Session = Depends(get_db)):
+    try:
+        user = db.query(models.User).filter(
+            models.User.email == email).first()
+        if not user:
+            return True
+        return False
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+    
+# add user career interests
+
+@router.post('/addCareerInerests', status_code=status.HTTP_201_CREATED , response_model=schemas.UserProfile)
+def add_career_interests(
+    request: schemas.UserCareerInterests,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        # Check if there is an existing keyword entry for the current user
+        user_query = db.query(models.User_Career_Interests).filter(
+            models.User_Career_Interests.user_id == current_user.id
+        ).first()
+
+        if user_query:
+            db.query(models.User_Career_Interests).filter(
+                models.User_Career_Interests.user_id == current_user.id
+            ).update(
+                #update logic here
+                request.model_dump() , synchronize_session=False)
+            db.commit()
+            db.refresh(user_query)
+
+            # Return the updated user career interests
+            return current_user
+        else:
+            # If there is no existing career interests entry, create a new one
+            new_user_career_interests = models.User_Career_Interests(
+                **request.model_dump(),
+                user_id=current_user.id 
+            )
+            db.add(new_user_career_interests)
+            db.commit()
+            # Return the newly created career interests
+            return current_user
+    except SQLAlchemyError as e:
+        # If there is a SQLAlchemy error, raise an HTTP exception
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+
