@@ -31,7 +31,7 @@ def upgrade() -> None:
                     sa.PrimaryKeyConstraint('id'),
                     sa.UniqueConstraint('email')
                     )
-    op.create_table('user_career_interests',
+    op.create_table('users_career_interests',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=False),
                     sa.Column('career_level', sa.String(), nullable=False),
@@ -50,7 +50,7 @@ def upgrade() -> None:
                     sa.UniqueConstraint('user_id')
                     )
 
-    op.create_table('user_personal_info',
+    op.create_table('users_personal_info',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=False),
                     sa.Column('middel_name', sa.String(), nullable=True),
