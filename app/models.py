@@ -1,5 +1,6 @@
+from datetime import timedelta
 from .database import Base
-from sqlalchemy import TIMESTAMP, Boolean, Column, Date, Integer, LargeBinary, String, text, ForeignKey
+from sqlalchemy import TIMESTAMP, Boolean, Column, Date, Integer, LargeBinary, String, text, ForeignKey ,event
 from sqlalchemy.orm import relationship
 
 
@@ -13,8 +14,12 @@ class Job(Base):
     skills = Column(String, nullable=False)
     link = Column(String, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
-    expired_at = Column(TIMESTAMP, nullable=False, server_default=text(
-        "(created_at + interval '7 days')"))
+    expired_at = Column(TIMESTAMP, nullable=False)
+    
+
+@event.listens_for(Job, 'before_insert')
+def set_expired_at(mapper, connection, target):
+    target.expired_at = target.created_at + timedelta(days=7)
 
 
 class User(Base):
@@ -30,7 +35,11 @@ class User(Base):
     img = relationship("User_Img", uselist=False)
     personal_info = relationship("User_Personal_Info", uselist=False)
     career_interests = relationship("User_Career_Interests", uselist=False)
-
+    work_experience = relationship("User_Work_Experience", uselist=False)
+    skills = relationship("User_Skills" , uselist=True)
+    languages = relationship("User_Language", uselist=True)
+    education = relationship("User_Education", uselist=True)
+    
 
 class User_Personal_Info(Base):
     __tablename__ = "users_personal_info"
@@ -55,7 +64,7 @@ class User_Career_Interests(Base):
         'users.id', ondelete='cascade'), nullable=False, unique=True)
     career_level = Column(String, nullable=False)
     job_types = Column(String, nullable=False)
-    job_titels = Column(String, nullable=False)
+    job_titels = Column(String, nullable=True)
     job_categories = Column(String, nullable=False)
     min_salary = Column(String, nullable=False)
     hide_min_salary = Column(Boolean, nullable=False, default=False)
@@ -70,6 +79,9 @@ class User_Cv(Base):
         'users.id', ondelete='cascade'), nullable=False, unique=True)
     cv_name = Column(String, nullable=False)
     cv_file = Column(LargeBinary, nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=False),
+                        nullable=False, server_default=text('now()'))
+    
 
 
 class User_Img(Base):
@@ -80,10 +92,53 @@ class User_Img(Base):
     img_name = Column(String, nullable=False)
     img_file = Column(LargeBinary, nullable=False)
 
-
-class User_Keyword(Base):
-    __tablename__ = "user_keywords"
+class User_Work_Experience(Base):
+    __tablename__ = "users_work_experience"
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, ForeignKey(
         'users.id', ondelete='cascade'), nullable=False, unique=True)
-    keywords = Column(String, nullable=True)
+    experience_type = Column(String, nullable=False)
+    job_title = Column(String, nullable=False)
+    job_category = Column(String, nullable=False)
+    company_name = Column(String, nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=True)
+    work_there = Column(Boolean, nullable=False, default=False)
+
+class User_Education(Base):
+    __tablename__ = "users_education"
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey(
+        'users.id', ondelete='cascade'), nullable=False)
+    degree = Column(String, nullable=False)
+    field_of_study = Column(String, nullable=False)
+    university = Column(String, nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    grade = Column(String, nullable=True)
+
+class User_Skills(Base):
+    __tablename__ = "users_skills"
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey(
+        'users.id', ondelete='cascade'), nullable=False)
+    skill = Column(String, nullable=False)
+    profeciency = Column(String, nullable=False)
+
+class User_Language(Base):
+    __tablename__ = "users_languages"
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey(
+        'users.id', ondelete='cascade'), nullable=False)
+    language = Column(String, nullable=False)
+    profeciency = Column(String, nullable=False)
+
+
+
+
+# class User_Keyword(Base):
+#     __tablename__ = "user_keywords"
+#     id = Column(Integer, primary_key=True, nullable=False)
+#     user_id = Column(Integer, ForeignKey(
+#         'users.id', ondelete='cascade'), nullable=False, unique=True)
+#     keywords = Column(String, nullable=True)
