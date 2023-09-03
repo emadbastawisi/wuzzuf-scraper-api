@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import LargeBinary
 
@@ -32,10 +32,12 @@ class UserCareerInterests(BaseModel):
 class UserCv(BaseModel):
     cv_name: str
     cv_file: LargeBinary
-
     class Config():
         arbitrary_types_allowed = True
-
+class UserCvOut(UserCv):
+    updated_at: datetime
+    class Config():
+        from_attributes = True
 
 class UserImg(BaseModel):
     img_name: str
@@ -44,6 +46,35 @@ class UserImg(BaseModel):
     class Config():
         arbitrary_types_allowed = True
 
+class UserImgOut(UserImg):
+    created_at: datetime
+    class Config():
+        from_attributes = True
+
+class UserWorkExperience(BaseModel):
+    experience_type: str
+    job_title: str
+    job_category: str
+    company_name: str
+    start_date: date
+    end_date: Optional[date]
+    work_there: Optional[bool]    
+
+class UserSkills(BaseModel):
+    skill: str
+    profeciency: str
+
+class UserEducation(BaseModel):
+    degree: str
+    university: str
+    field_of_study: str
+    start_date: date
+    end_date: date
+    grade: str
+
+class UserLanguage(BaseModel):
+    language: str
+    profeciency: str
 
 class User(BaseModel):
     first_name: str
@@ -57,6 +88,7 @@ class UserCreateIn(User):
 
 
 class UserCreateOut(User):
+    id: int
     created_at: datetime
 
     class Config():
@@ -64,11 +96,16 @@ class UserCreateOut(User):
 
 
 class UserOut(User):
+    id: int
     created_at: datetime
-    img: Optional[UserImg]
-    cv: Optional[UserCv]
+    img: Optional[UserImgOut]
+    cv: Optional[UserCvOut]
     personal_info: Optional[UserPersonalInfo]
     career_interests: Optional[UserCareerInterests]
+    work_experience: Optional[UserWorkExperience]
+    education: Optional[List[UserEducation]]
+    skills: Optional[List[UserSkills]]
+    languages: Optional[List[UserLanguage]]
 
     class Config():
         from_attributes = True
@@ -93,7 +130,7 @@ class TokenData(BaseModel):
 
 
 class LoginOut(Token):
-    current_user: CurrentUserOut
+    current_user: UserOut
 
     class Config():
         from_attributes = True
