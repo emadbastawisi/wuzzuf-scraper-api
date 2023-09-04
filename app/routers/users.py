@@ -25,6 +25,7 @@ async def get_users(db: Session = Depends(get_db)):
 
 # create a new user
 
+
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.UserCreateOut)
 def create_user(user: schemas.UserCreateIn, db: Session = Depends(get_db)):
     if user.email == '' or user.first_name == '' or user.last_name == '' or user.password == '':
@@ -37,10 +38,7 @@ def create_user(user: schemas.UserCreateIn, db: Session = Depends(get_db)):
     hashed_password = utils.hash(user.password)
 
     new_user = models.User(
-        email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        password=hashed_password
+        user.model_dump()
     )
 
     db.add(new_user)
@@ -50,6 +48,7 @@ def create_user(user: schemas.UserCreateIn, db: Session = Depends(get_db)):
     return new_user
 
 # get current user
+
 
 @router.get('/current', response_model=schemas.CurrentUserOut)
 def get_current_user(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
@@ -66,6 +65,7 @@ def get_current_user(db: Session = Depends(get_db), current_user: int = Depends(
 
 # get user profile
 
+
 @router.get('/profile', response_model=schemas.UserProfile)
 def get_current_user(db: Session = Depends(get_db), current_user: int = Depends(Oauth2.get_current_user)):
     try:
@@ -77,7 +77,7 @@ def get_current_user(db: Session = Depends(get_db), current_user: int = Depends(
     except SQLAlchemyError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )    
+        )
 
 
 # update user password
@@ -96,6 +96,7 @@ def update_password(password: schemas.Password, db: Session = Depends(get_db), c
 
 # delete user by id
 
+
 @router.delete('/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).get(user_id)
@@ -109,6 +110,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 
 # get user by id
 
+
 @router.get('/email/{email}')
 def get_user(email: str, db: Session = Depends(get_db)):
     try:
@@ -121,17 +123,18 @@ def get_user(email: str, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
-    
+
 # add user career interests
 
-@router.post('/addCareerInerests', status_code=status.HTTP_201_CREATED , response_model=schemas.UserProfile)
+
+@router.post('/addCareerInterests', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
 def add_career_interests(
     request: schemas.UserCareerInterests,
     db: Session = Depends(get_db),
     current_user: int = Depends(Oauth2.get_current_user)
 ):
     try:
-        # Check if there is an existing keyword entry for the current user
+        # Check if there is an existing career interests entry for the current user
         user_query = db.query(models.User_Career_Interests).filter(
             models.User_Career_Interests.user_id == current_user.id
         ).first()
@@ -140,28 +143,60 @@ def add_career_interests(
             db.query(models.User_Career_Interests).filter(
                 models.User_Career_Interests.user_id == current_user.id
             ).update(
-                #update logic here
-                request.model_dump() , synchronize_session=False)
-            db.commit()
-            db.refresh(user_query)
-
-            # Return the updated user career interests
-            return current_user
+                request.model_dump(), synchronize_session=False)
         else:
             # If there is no existing career interests entry, create a new one
             new_user_career_interests = models.User_Career_Interests(
                 **request.model_dump(),
-                user_id=current_user.id 
+                user_id=current_user.id
             )
             db.add(new_user_career_interests)
-            db.commit()
-            # Return the newly created career interests
-            return current_user
+
+        db.commit()
+        # Return the updated user profile
+        return current_user
     except SQLAlchemyError as e:
         # If there is a SQLAlchemy error, raise an HTTP exception
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
+# add user career interests
 
 
+@router.post('/addPersonalInfo', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
+def add_personal_info(
+    request: schemas.UserPersonalInfoIn,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        request_dict = vars(request)
+        personal_info = {key: value for key, value in request_dict.items() if key not in [
+            'first_name', 'last_name']}
+        db.query(models.User).filter(
+            models.User.id == current_user.id
+        ).update({
+            'first_name': request.first_name,
+            'last_name': request.last_name
+        }, synchronize_session=False)
+
+        user_query = db.query(models.User_Personal_Info).filter(
+            models.User_Personal_Info.user_id == current_user.id
+        ).first()
+        if user_query:
+            db.query(models.User_Personal_Info).filter(
+                models.User_Personal_Info.user_id == current_user.id
+            ).update(personal_info, synchronize_session=False)
+        else:
+            new_User_Personal_Info = models.User_Personal_Info(
+                **personal_info,
+                user_id=current_user.id
+            )
+            db.add(new_User_Personal_Info)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )

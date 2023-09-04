@@ -1,6 +1,6 @@
 from datetime import timedelta
 from .database import Base
-from sqlalchemy import TIMESTAMP, Boolean, Column, Date, Integer, LargeBinary, String, text, ForeignKey ,event
+from sqlalchemy import TIMESTAMP, Boolean, Column, Date, DateTime, Integer, LargeBinary, String, text, ForeignKey, event
 from sqlalchemy.orm import relationship
 
 
@@ -15,7 +15,7 @@ class Job(Base):
     link = Column(String, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False)
     expired_at = Column(TIMESTAMP, nullable=False)
-    
+
 
 @event.listens_for(Job, 'before_insert')
 def set_expired_at(mapper, connection, target):
@@ -36,10 +36,10 @@ class User(Base):
     personal_info = relationship("User_Personal_Info", uselist=False)
     career_interests = relationship("User_Career_Interests", uselist=False)
     work_experience = relationship("User_Work_Experience", uselist=True)
-    skills = relationship("User_Skills" , uselist=True)
+    skills = relationship("User_Skills", uselist=True)
     languages = relationship("User_Language", uselist=True)
     education = relationship("User_Education", uselist=True)
-    
+
 
 class User_Personal_Info(Base):
     __tablename__ = "users_personal_info"
@@ -47,7 +47,7 @@ class User_Personal_Info(Base):
     user_id = Column(Integer, ForeignKey(
         'users.id', ondelete='cascade'), nullable=False, unique=True)
     middel_name = Column(String, nullable=True)
-    birthdate = Column(Date, nullable=False)
+    birthdate = Column(DateTime, nullable=False)
     gender = Column(String, nullable=False)
     nationality = Column(String, nullable=False)
     marital_status = Column(String, nullable=True)
@@ -81,7 +81,6 @@ class User_Cv(Base):
     cv_file = Column(LargeBinary, nullable=False)
     updated_at = Column(TIMESTAMP(timezone=False),
                         nullable=False, server_default=text('now()'))
-    
 
 
 class User_Img(Base):
@@ -92,6 +91,7 @@ class User_Img(Base):
     img_name = Column(String, nullable=False)
     img_file = Column(LargeBinary, nullable=False)
 
+
 class User_Work_Experience(Base):
     __tablename__ = "users_work_experience"
     id = Column(Integer, primary_key=True, nullable=False)
@@ -101,9 +101,10 @@ class User_Work_Experience(Base):
     job_title = Column(String, nullable=False)
     job_category = Column(String, nullable=False)
     company_name = Column(String, nullable=False)
-    start_date = Column(Date, nullable=False)
-    end_date = Column(Date, nullable=True)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=True)
     work_there = Column(Boolean, nullable=False, default=False)
+
 
 class User_Education(Base):
     __tablename__ = "users_education"
@@ -113,9 +114,9 @@ class User_Education(Base):
     degree = Column(String, nullable=False)
     field_of_study = Column(String, nullable=False)
     university = Column(String, nullable=False)
-    start_date = Column(Date, nullable=False)
-    end_date = Column(Date, nullable=False)
+    degree_year = Column(String, nullable=False)
     grade = Column(String, nullable=True)
+
 
 class User_Skills(Base):
     __tablename__ = "users_skills"
@@ -125,6 +126,7 @@ class User_Skills(Base):
     skill = Column(String, nullable=False)
     proficiency = Column(String, nullable=False)
 
+
 class User_Language(Base):
     __tablename__ = "users_languages"
     id = Column(Integer, primary_key=True, nullable=False)
@@ -132,8 +134,6 @@ class User_Language(Base):
         'users.id', ondelete='cascade'), nullable=False)
     language = Column(String, nullable=False)
     proficiency = Column(String, nullable=False)
-
-
 
 
 # class User_Keyword(Base):

@@ -8,7 +8,7 @@ from sqlalchemy import LargeBinary
 
 class UserPersonalInfo(BaseModel):
     middel_name: Optional[str] = None
-    birthdate: date
+    birthdate: datetime
     gender: str
     nationality: str
     marital_status:  Optional[str] = None
@@ -16,6 +16,14 @@ class UserPersonalInfo(BaseModel):
     driving_license: Optional[str] = None
     address: str
     phone: str
+
+
+class UserPersonalInfoIn(UserPersonalInfo):
+    first_name: str
+    last_name: str
+
+    class Config():
+        arbitrary_types_allowed = True
 
 
 class UserCareerInterests(BaseModel):
@@ -32,12 +40,17 @@ class UserCareerInterests(BaseModel):
 class UserCv(BaseModel):
     cv_name: str
     cv_file: LargeBinary
+
     class Config():
         arbitrary_types_allowed = True
+
+
 class UserCvOut(UserCv):
     updated_at: datetime
+
     class Config():
         from_attributes = True
+
 
 class UserImg(BaseModel):
     img_name: str
@@ -46,35 +59,41 @@ class UserImg(BaseModel):
     class Config():
         arbitrary_types_allowed = True
 
+
 class UserImgOut(UserImg):
     created_at: datetime
+
     class Config():
         from_attributes = True
+
 
 class UserWorkExperience(BaseModel):
     experience_type: str
     job_title: str
     job_category: str
     company_name: str
-    start_date: date
+    start_date: datetime
     end_date: Optional[date]
-    work_there: Optional[bool]    
+    work_there: Optional[bool]
+
 
 class UserSkills(BaseModel):
     skill: str
     profeciency: str
 
+
 class UserEducation(BaseModel):
     degree: str
     university: str
     field_of_study: str
-    start_date: date
-    end_date: date
+    degree_year: str
     grade: str
+
 
 class UserLanguage(BaseModel):
     language: str
     profeciency: str
+
 
 class User(BaseModel):
     first_name: str
