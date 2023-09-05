@@ -1,3 +1,4 @@
+import pickle
 from fastapi import Depends, Response, status, HTTPException, APIRouter
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
@@ -194,6 +195,43 @@ def add_personal_info(
                 user_id=current_user.id
             )
             db.add(new_User_Personal_Info)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+# add user cv
+
+
+@router.post('/addCV', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
+def add_cv(
+    request: schemas.UserCv,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        binary_cv_file = pickle.dumps(request.cv_file)
+        # print(type(request.cv_file))
+        # check if user already has a cv entery
+        user_query = db.query(models.User_Cv).filter(
+            models.User_Cv.user_id == current_user.id
+        ).first()
+        if user_query:
+            db.query(models.User_Cv).filter(
+                models.User_Cv.user_id == current_user.id
+            ).update({
+                'cv_file': binary_cv_file,
+                'cv_name': request.cv_name
+            }, synchronize_session=False)
+        else:
+            new_user_cv = models.User_Cv(
+                cv_file=binary_cv_file,
+                cv_name=request.cv_name,
+                user_id=current_user.id
+            )
+            db.add(new_user_cv)
         db.commit()
         return current_user
     except SQLAlchemyError as e:

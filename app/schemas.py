@@ -1,7 +1,10 @@
 from datetime import date, datetime
+import pickle
 from typing import List, Optional
+from fastapi import File, UploadFile
+from psycopg2 import Binary
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import LargeBinary
+from sqlalchemy import BINARY, LargeBinary
 
 
 # user section
@@ -39,22 +42,25 @@ class UserCareerInterests(BaseModel):
 
 class UserCv(BaseModel):
     cv_name: str
-    cv_file: LargeBinary
+    cv_file: dict
 
     class Config():
         arbitrary_types_allowed = True
 
 
-class UserCvOut(UserCv):
+class UserCvOut(BaseModel):
+    cv_name: str
+    cv_dict: dict
     updated_at: datetime
 
     class Config():
+        arbitrary_types_allowed = True
         from_attributes = True
 
 
 class UserImg(BaseModel):
     img_name: str
-    img_file: LargeBinary
+    img_file: dict
 
     class Config():
         arbitrary_types_allowed = True

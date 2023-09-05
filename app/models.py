@@ -1,7 +1,9 @@
 from datetime import timedelta
+import pickle
 from .database import Base
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, DateTime, Integer, LargeBinary, String, text, ForeignKey, event
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class Job(Base):
@@ -81,6 +83,14 @@ class User_Cv(Base):
     cv_file = Column(LargeBinary, nullable=False)
     updated_at = Column(TIMESTAMP(timezone=False),
                         nullable=False, server_default=text('now()'))
+
+    @hybrid_property
+    def cv_dict(self):
+        return pickle.loads(self.cv_file)
+
+    @cv_dict.setter
+    def cv_dict(self, value):
+        self.cv_file = pickle.dumps(value)
 
 
 class User_Img(Base):
