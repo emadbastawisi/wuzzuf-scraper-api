@@ -40,17 +40,9 @@ class UserCareerInterests(BaseModel):
     current_job_search_status: Optional[str] = None
 
 
-class UserCv(BaseModel):
-    cv_name: str
-    cv_file: dict
-
-    class Config():
-        arbitrary_types_allowed = True
-
-
 class UserCvOut(BaseModel):
     cv_name: str
-    cv_dict: dict
+    # cv_dict: dict
     updated_at: datetime
 
     class Config():
@@ -58,15 +50,8 @@ class UserCvOut(BaseModel):
         from_attributes = True
 
 
-class UserImg(BaseModel):
+class UserImgOut(BaseModel):
     img_name: str
-    img_file: dict
-
-    class Config():
-        arbitrary_types_allowed = True
-
-
-class UserImgOut(UserImg):
     created_at: datetime
 
     class Config():
@@ -137,7 +122,7 @@ class UserProfile(User):
 
 
 class CurrentUserOut(User):
-    img: Optional[UserImg]
+    pass
 
     class Config():
         from_attributes = True

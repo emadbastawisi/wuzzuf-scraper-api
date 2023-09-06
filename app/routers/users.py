@@ -1,5 +1,8 @@
+from datetime import datetime
+import io
 import pickle
-from fastapi import Depends, Response, status, HTTPException, APIRouter
+from fastapi import Depends, File, Response, UploadFile, status, HTTPException, APIRouter
+from fastapi.responses import StreamingResponse
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -98,7 +101,7 @@ def update_password(password: schemas.Password, db: Session = Depends(get_db), c
 # delete user by id
 
 
-@router.delete('/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/deleteUser/{user_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).get(user_id)
     if user is None:
@@ -202,18 +205,43 @@ def add_personal_info(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
-# add user cv
+# get user cv
 
 
-@router.post('/addCV', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
-def add_cv(
-    request: schemas.UserCv,
+@router.get('/cv',)
+def get_cv(
     db: Session = Depends(get_db),
     current_user: int = Depends(Oauth2.get_current_user)
 ):
     try:
-        binary_cv_file = pickle.dumps(request.cv_file)
-        # print(type(request.cv_file))
+        user_query = db.query(models.User_Cv).filter(
+            models.User_Cv.user_id == current_user.id
+        ).first()
+        if not user_query:
+            raise HTTPException(status_code=404, detail="CV not found")
+
+        # Create a StreamingResponse to send the file to the client
+        response = StreamingResponse(io.BytesIO(
+            user_query.cv_file), media_type="application/pdf")
+        response.headers["Content-Disposition"] = f"attachment; filename={user_query.cv_name}"
+        return response
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+# add user cv
+
+
+@router.post('/addCV', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
+async def add_cv(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        contents = await file.read()
         # check if user already has a cv entery
         user_query = db.query(models.User_Cv).filter(
             models.User_Cv.user_id == current_user.id
@@ -222,16 +250,43 @@ def add_cv(
             db.query(models.User_Cv).filter(
                 models.User_Cv.user_id == current_user.id
             ).update({
-                'cv_file': binary_cv_file,
-                'cv_name': request.cv_name
+                'cv_file': contents,
+                'cv_name': file.filename,
+                'updated_at': datetime.now()
             }, synchronize_session=False)
         else:
             new_user_cv = models.User_Cv(
-                cv_file=binary_cv_file,
-                cv_name=request.cv_name,
+                cv_file=contents,
+                cv_name=file.filename,
                 user_id=current_user.id
             )
             db.add(new_user_cv)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+# delete user cv
+
+@router.delete('/deleteCV', response_model=schemas.UserProfile)
+def delete_cv(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        user_query = db.query(models.User_Cv).filter(
+            models.User_Cv.user_id == current_user.id
+        ).first()
+
+        if not user_query:
+            raise HTTPException(status_code=404, detail="CV not found")
+
+        db.query(models.User_Cv).filter(
+            models.User_Cv.user_id == current_user.id
+        ).delete(synchronize_session=False)
         db.commit()
         return current_user
     except SQLAlchemyError as e:
