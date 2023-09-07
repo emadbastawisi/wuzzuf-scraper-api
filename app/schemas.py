@@ -64,13 +64,28 @@ class UserWorkExperience(BaseModel):
     job_category: str
     company_name: str
     start_date: datetime
-    end_date: Optional[date]
-    work_there: Optional[bool]
+    end_date: Optional[datetime]
+    work_there: bool
+
+
+class UserWorkExperienceOut(UserWorkExperience):
+    id: int
+    updated_at: datetime
+
+    class Config():
+        from_attributes = True
 
 
 class UserSkills(BaseModel):
     skill: str
     profeciency: str
+
+
+class UserSkillsOut(UserSkills):
+    id: int
+
+    class Config():
+        from_attributes = True
 
 
 class UserEducation(BaseModel):
@@ -81,9 +96,24 @@ class UserEducation(BaseModel):
     grade: str
 
 
+class UserEducationOut(UserEducation):
+    id: int
+    updated_at: datetime
+
+    class Config():
+        from_attributes = True
+
+
 class UserLanguage(BaseModel):
     language: str
     profeciency: str
+
+
+class UserLanguageOut(UserLanguage):
+    id: int
+
+    class Config():
+        from_attributes = True
 
 
 class User(BaseModel):
@@ -112,10 +142,10 @@ class UserProfile(User):
     cv: Optional[UserCvOut]
     personal_info: Optional[UserPersonalInfo]
     career_interests: Optional[UserCareerInterests]
-    work_experience: Optional[List[UserWorkExperience]]
-    education: Optional[List[UserEducation]]
-    skills: Optional[List[UserSkills]]
-    languages: Optional[List[UserLanguage]]
+    work_experience: Optional[List[UserWorkExperienceOut]]
+    education: Optional[List[UserEducationOut]]
+    skills: Optional[List[UserSkillsOut]]
+    languages: Optional[List[UserLanguageOut]]
 
     class Config():
         from_attributes = True

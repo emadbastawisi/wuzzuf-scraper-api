@@ -293,3 +293,85 @@ def delete_cv(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
+
+# add work experience
+
+
+@router.post('/addWorkExperience', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
+def add_work_experience(
+    request: schemas.UserWorkExperience,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        new_user_work_experience = models.User_Work_Experience(
+            **request.model_dump(),
+            user_id=current_user.id
+        )
+        db.add(new_user_work_experience)
+
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+# update work experience
+
+
+@router.patch('/updateWorkExperience', status_code=status.HTTP_200_OK)
+def update_work_experience(
+    request: schemas.UserWorkExperienceOut,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        user_query = db.query(models.User_Work_Experience).filter(
+            models.User_Work_Experience.user_id == current_user.id &
+            models.User_Work_Experience.id == request.id
+        ).first()
+
+        if not user_query:
+            raise HTTPException(
+                status_code=404, detail="Work Experience not found")
+
+        db.query(models.User_Work_Experience).filter(
+            models.User_Work_Experience.user_id == current_user.id
+        ).update({**request.model_dump(), 'updated_at': datetime.now()}, synchronize_session=False)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+# delete work experience
+
+
+@router.delete('/deleteWorkExperience', response_model=schemas.UserProfile)
+def delete_work_experience(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        user_query = db.query(models.User_Work_Experience).filter(
+            models.User_Work_Experience.user_id == current_user.id &
+            models.User_Work_Experience.id == id
+        ).first()
+
+        if not user_query:
+            raise HTTPException(
+                status_code=404, detail="Work Experience not found")
+
+        db.query(models.User_Work_Experience).filter(
+            models.User_Work_Experience.user_id == current_user.id
+        ).delete(synchronize_session=False)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )

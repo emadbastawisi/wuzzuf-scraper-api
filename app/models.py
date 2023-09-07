@@ -1,9 +1,7 @@
 from datetime import timedelta
-import pickle
 from .database import Base
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, DateTime, Integer, LargeBinary, String, text, ForeignKey, event
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class Job(Base):
@@ -84,14 +82,6 @@ class User_Cv(Base):
     updated_at = Column(TIMESTAMP(timezone=False),
                         nullable=False, server_default=text('now()'))
 
-    @hybrid_property
-    def cv_dict(self):
-        return pickle.loads(self.cv_file)
-
-    @cv_dict.setter
-    def cv_dict(self, value):
-        self.cv_file = pickle.dumps(value)
-
 
 class User_Img(Base):
     __tablename__ = "users_img"
@@ -106,7 +96,7 @@ class User_Work_Experience(Base):
     __tablename__ = "users_work_experience"
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, ForeignKey(
-        'users.id', ondelete='cascade'), nullable=False, unique=True)
+        'users.id', ondelete='cascade'), nullable=False)
     experience_type = Column(String, nullable=False)
     job_title = Column(String, nullable=False)
     job_category = Column(String, nullable=False)
@@ -114,6 +104,8 @@ class User_Work_Experience(Base):
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=True)
     work_there = Column(Boolean, nullable=False, default=False)
+    updated_at = Column(TIMESTAMP(timezone=False),
+                        nullable=False, server_default=text('now()'))
 
 
 class User_Education(Base):
@@ -126,6 +118,8 @@ class User_Education(Base):
     university = Column(String, nullable=False)
     degree_year = Column(String, nullable=False)
     grade = Column(String, nullable=True)
+    updated_at = Column(TIMESTAMP(timezone=False),
+                        nullable=False, server_default=text('now()'))
 
 
 class User_Skills(Base):
