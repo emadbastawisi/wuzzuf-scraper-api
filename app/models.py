@@ -1,7 +1,22 @@
 from datetime import timedelta
 from .database import Base
-from sqlalchemy import TIMESTAMP, Boolean, Column, Date, DateTime, Integer, LargeBinary, String, text, ForeignKey, event
+from sqlalchemy import TIMESTAMP, Boolean, Column, DateTime, Integer, LargeBinary, String, text, ForeignKey, event
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.types import TypeDecorator, String
+
+
+class ListOfString(TypeDecorator):
+    impl = String
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return ','.join(value)
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return value.split(',')
 
 
 class Job(Base):
@@ -99,7 +114,7 @@ class User_Work_Experience(Base):
         'users.id', ondelete='cascade'), nullable=False)
     experience_type = Column(String, nullable=False)
     job_title = Column(String, nullable=False)
-    job_category = Column(String, nullable=False)
+    job_category = Column(ListOfString, nullable=False)
     company_name = Column(String, nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=True)

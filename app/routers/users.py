@@ -320,15 +320,15 @@ def add_work_experience(
 # update work experience
 
 
-@router.patch('/updateWorkExperience', status_code=status.HTTP_200_OK)
+@router.put('/updateWorkExperience', status_code=status.HTTP_200_OK, response_model=schemas.UserProfile)
 def update_work_experience(
-    request: schemas.UserWorkExperienceOut,
+    request: schemas.UserWorkExperience,
     db: Session = Depends(get_db),
     current_user: int = Depends(Oauth2.get_current_user)
 ):
     try:
         user_query = db.query(models.User_Work_Experience).filter(
-            models.User_Work_Experience.user_id == current_user.id &
+            models.User_Work_Experience.user_id == current_user.id,
             models.User_Work_Experience.id == request.id
         ).first()
 
@@ -350,7 +350,7 @@ def update_work_experience(
 # delete work experience
 
 
-@router.delete('/deleteWorkExperience', response_model=schemas.UserProfile)
+@router.delete('/deleteWorkExperience/{id}', response_model=schemas.UserProfile)
 def delete_work_experience(
     id: int,
     db: Session = Depends(get_db),
@@ -358,8 +358,7 @@ def delete_work_experience(
 ):
     try:
         user_query = db.query(models.User_Work_Experience).filter(
-            models.User_Work_Experience.user_id == current_user.id &
-            models.User_Work_Experience.id == id
+            models.User_Work_Experience.user_id == current_user.id, models.User_Work_Experience.id == id
         ).first()
 
         if not user_query:

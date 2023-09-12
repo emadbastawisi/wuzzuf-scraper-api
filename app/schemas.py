@@ -59,17 +59,17 @@ class UserImgOut(BaseModel):
 
 
 class UserWorkExperience(BaseModel):
+    id: Optional[int] = None
     experience_type: str
     job_title: str
-    job_category: str
+    job_category: list[str]
     company_name: str
     start_date: datetime
-    end_date: Optional[datetime]
+    end_date: Optional[datetime] = None
     work_there: bool
 
 
 class UserWorkExperienceOut(UserWorkExperience):
-    id: int
     updated_at: datetime
 
     class Config():
