@@ -78,7 +78,7 @@ class UserWorkExperienceOut(UserWorkExperience):
 
 class UserSkills(BaseModel):
     skill: str
-    profeciency: str
+    proficiency: str
 
 
 class UserSkillsOut(UserSkills):
@@ -105,15 +105,9 @@ class UserEducationOut(UserEducation):
 
 
 class UserLanguage(BaseModel):
+    id: Optional[int] = None
     language: str
-    profeciency: str
-
-
-class UserLanguageOut(UserLanguage):
-    id: int
-
-    class Config():
-        from_attributes = True
+    proficiency: str
 
 
 class User(BaseModel):
@@ -145,7 +139,7 @@ class UserProfile(User):
     work_experience: Optional[List[UserWorkExperienceOut]]
     education: Optional[List[UserEducationOut]]
     skills: Optional[List[UserSkillsOut]]
-    languages: Optional[List[UserLanguageOut]]
+    languages: Optional[List[UserLanguage]]
 
     class Config():
         from_attributes = True

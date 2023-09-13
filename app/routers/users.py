@@ -337,7 +337,7 @@ def update_work_experience(
                 status_code=404, detail="Work Experience not found")
 
         db.query(models.User_Work_Experience).filter(
-            models.User_Work_Experience.user_id == current_user.id
+            models.User_Work_Experience.id == request.id
         ).update({**request.model_dump(), 'updated_at': datetime.now()}, synchronize_session=False)
         db.commit()
         return current_user
@@ -366,8 +366,98 @@ def delete_work_experience(
                 status_code=404, detail="Work Experience not found")
 
         db.query(models.User_Work_Experience).filter(
-            models.User_Work_Experience.user_id == current_user.id
+            models.User_Work_Experience.id == id
         ).delete(synchronize_session=False)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+# add user language
+
+
+@router.post('/addLanguage', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
+def add_language(
+    request: schemas.UserLanguage,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        # check if user already added this language
+        user_language_query = db.query(models.User_Language).filter(
+            models.User_Language.user_id == current_user.id,
+            models.User_Language.language == request.language
+        ).first()
+        if user_language_query:
+            raise HTTPException(
+                status_code=400, detail="Language already added")
+
+        new_user_language = models.User_Language(
+            **request.model_dump(),
+            user_id=current_user.id
+        )
+        db.add(new_user_language)
+
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+# delete user language
+
+
+@router.delete('/deleteLanguage/{id}', response_model=schemas.UserProfile)
+def delete_language(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        user_query = db.query(models.User_Language).filter(
+            models.User_Language.user_id == current_user.id, models.User_Language.id == id
+        ).first()
+
+        if not user_query:
+            raise HTTPException(
+                status_code=404, detail="Language not found")
+
+        db.query(models.User_Language).filter(
+            models.User_Language.id == id
+        ).delete(synchronize_session=False)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+# update user language
+
+
+@router.put('/updateLanguage', status_code=status.HTTP_200_OK, response_model=schemas.UserProfile)
+def update_language(
+    request: schemas.UserLanguage,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        user_query = db.query(models.User_Language).filter(
+            models.User_Language.user_id == current_user.id,
+            models.User_Language.id == request.id
+        ).first()
+
+        if not user_query:
+            raise HTTPException(
+                status_code=404, detail="Language not found")
+
+        db.query(models.User_Language).filter(
+            models.User_Language.id == request.id
+        ).update({**request.model_dump()}, synchronize_session=False)
         db.commit()
         return current_user
     except SQLAlchemyError as e:
