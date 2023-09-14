@@ -31,9 +31,10 @@ class UserPersonalInfoIn(UserPersonalInfo):
 
 class UserCareerInterests(BaseModel):
     career_level: str
-    job_types: str
-    job_titles: Optional[str] = None
-    job_categories: str
+    years_of_experience: Optional[str] = None
+    job_types: list[str]
+    job_titles: Optional[list[str]] = None
+    job_categories: list[str]
     min_salary: str
     hide_min_salary: bool
     perfered_job_location: Optional[str] = None
@@ -78,7 +79,7 @@ class UserWorkExperienceOut(UserWorkExperience):
 
 class UserSkills(BaseModel):
     skill: str
-    proficiency: str
+    proficiency: Optional[str] = 'Beginner'
 
 
 class UserSkillsOut(UserSkills):
@@ -88,20 +89,25 @@ class UserSkillsOut(UserSkills):
         from_attributes = True
 
 
-class UserEducation(BaseModel):
+class UserDegree(BaseModel):
+    id: Optional[int] = None
     degree: str
     university: str
-    field_of_study: str
+    field_of_study: list[str]
     degree_year: str
     grade: str
+    updated_at: Optional[datetime] = None
 
 
-class UserEducationOut(UserEducation):
-    id: int
-    updated_at: datetime
-
-    class Config():
-        from_attributes = True
+class UserHighSchool(BaseModel):
+    id: Optional[int] = None
+    degree: str
+    school_name: str
+    certificate_name: str
+    language_of_study: str
+    graduation_year: str
+    highschool_grade: str
+    updated_at: Optional[datetime] = None
 
 
 class UserLanguage(BaseModel):
@@ -137,7 +143,8 @@ class UserProfile(User):
     personal_info: Optional[UserPersonalInfo]
     career_interests: Optional[UserCareerInterests]
     work_experience: Optional[List[UserWorkExperienceOut]]
-    education: Optional[List[UserEducationOut]]
+    degrees: Optional[List[UserDegree]]
+    highschool: Optional[List[UserHighSchool]]
     skills: Optional[List[UserSkillsOut]]
     languages: Optional[List[UserLanguage]]
 

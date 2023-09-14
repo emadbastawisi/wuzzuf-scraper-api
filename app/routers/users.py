@@ -3,7 +3,7 @@ import io
 import pickle
 from fastapi import Depends, File, Response, UploadFile, status, HTTPException, APIRouter
 from fastapi.responses import StreamingResponse
-from sqlalchemy import or_, select
+from sqlalchemy import String, or_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from .. import models, schemas, utils, Oauth2
@@ -458,6 +458,153 @@ def update_language(
         db.query(models.User_Language).filter(
             models.User_Language.id == request.id
         ).update({**request.model_dump()}, synchronize_session=False)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+# add user degree
+
+
+@router.post('/addDegree', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
+def add_degree(
+    request: schemas.UserDegree,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        # check if user already added this degree
+        user_degree_query = db.query(models.User_Degree).filter(
+            models.User_Degree.user_id == current_user.id,
+            models.User_Degree.degree == request.degree
+        ).first()
+        if user_degree_query:
+            raise HTTPException(
+                status_code=400, detail="Degree already added")
+
+        new_user_degree = models.User_Degree(
+            **request.model_dump(),
+            user_id=current_user.id
+        )
+        db.add(new_user_degree)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+# add user highschool
+
+
+@router.post('/addHighSchool', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
+def add_highschool(
+    request: schemas.UserHighSchool,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        # check if user already added this highschool
+        user_highschool_query = db.query(models.User_High_School).filter(
+            models.User_HighSchool.user_id == current_user.id,
+            models.User_HighSchool.school_name == request.school_name
+        ).first()
+        if user_highschool_query:
+            raise HTTPException(
+                status_code=400, detail="Highschool already added")
+
+        new_user_highschool = models.User_HighSchool(
+            **request.model_dump(),
+            user_id=current_user.id
+        )
+        db.add(new_user_highschool)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+# add user skills
+
+
+@router.post('/addSkills', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
+def add_user_skills(
+    request: list[schemas.UserSkills],
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        for skill in request:
+            new_user_skill = models.User_Skills(
+                **skill.model_dump(),
+                user_id=current_user.id
+            )
+            db.add(new_user_skill)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+# add user skill
+
+
+@router.post('/addSkill', status_code=status.HTTP_201_CREATED, response_model=schemas.UserProfile)
+def add_user_skill(
+    request: schemas.UserSkills,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        # check if user already added this skill
+        user_skill_query = db.query(models.User_Skills).filter(
+            models.User_Skills.user_id == current_user.id,
+            models.User_Skills.skill == request.skill
+        ).first()
+        if user_skill_query:
+            raise HTTPException(
+                status_code=400, detail="Skill already added")
+
+        new_user_skill = models.User_Skills(
+            **request.model_dump(),
+            user_id=current_user.id
+        )
+        db.add(new_user_skill)
+        db.commit()
+        return current_user
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+# update user career interests years of experience column
+
+
+@router.put('/addYearsOfExperience/{request}', status_code=status.HTTP_200_OK, response_model=schemas.UserProfile)
+def add_years_of_experience(
+    request: str,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(Oauth2.get_current_user)
+):
+    try:
+        user_query = db.query(models.User_Career_Interests).filter(
+            models.User_Career_Interests.user_id == current_user.id
+        ).first()
+
+        if not user_query:
+            raise HTTPException(
+                status_code=404, detail="User not found")
+
+        db.query(models.User_Career_Interests).filter(
+            models.User_Career_Interests.user_id == current_user.id
+        ).update({
+            'years_of_experience': request
+        }, synchronize_session=False)
         db.commit()
         return current_user
     except SQLAlchemyError as e:

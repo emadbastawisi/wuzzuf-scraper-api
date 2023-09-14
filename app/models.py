@@ -53,7 +53,8 @@ class User(Base):
     work_experience = relationship("User_Work_Experience", uselist=True)
     skills = relationship("User_Skills", uselist=True)
     languages = relationship("User_Language", uselist=True)
-    education = relationship("User_Education", uselist=True)
+    highschool = relationship("User_HighSchool", uselist=False)
+    degrees = relationship("User_Degree", uselist=True)
 
 
 class User_Personal_Info(Base):
@@ -78,9 +79,10 @@ class User_Career_Interests(Base):
     user_id = Column(Integer, ForeignKey(
         'users.id', ondelete='cascade'), nullable=False, unique=True)
     career_level = Column(String, nullable=False)
-    job_types = Column(String, nullable=False)
-    job_titles = Column(String, nullable=True)
-    job_categories = Column(String, nullable=False)
+    years_of_experience = Column(String, nullable=True)
+    job_types = Column(ListOfString, nullable=False)
+    job_titles = Column(ListOfString, nullable=True)
+    job_categories = Column(ListOfString, nullable=False)
     min_salary = Column(String, nullable=False)
     hide_min_salary = Column(Boolean, nullable=False, default=False)
     perfered_job_location = Column(String, nullable=True)
@@ -123,14 +125,29 @@ class User_Work_Experience(Base):
                         nullable=False, server_default=text('now()'))
 
 
-class User_Education(Base):
-    __tablename__ = "users_education"
+class User_Degree(Base):
+    __tablename__ = "users_degrees"
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, ForeignKey(
         'users.id', ondelete='cascade'), nullable=False)
     degree = Column(String, nullable=False)
-    field_of_study = Column(String, nullable=False)
+    field_of_study = Column(ListOfString, nullable=False)
     university = Column(String, nullable=False)
+    degree_year = Column(String, nullable=False)
+    grade = Column(String, nullable=True)
+    updated_at = Column(TIMESTAMP(timezone=False),
+                        nullable=False, server_default=text('now()'))
+
+
+class User_HighSchool(Base):
+    __tablename__ = "users_highschools"
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey(
+        'users.id', ondelete='cascade'), nullable=False)
+    degree = Column(String, nullable=False)
+    school_name = Column(String, nullable=False)
+    certificate_name = Column(String, nullable=False)
+    language_of_study = Column(String, nullable=False)
     degree_year = Column(String, nullable=False)
     grade = Column(String, nullable=True)
     updated_at = Column(TIMESTAMP(timezone=False),
