@@ -155,6 +155,13 @@ class User_Language(Base):
     proficiency = Column(String, nullable=False)
 
 
+class Skills(Base):
+    __tablename__ = "skills"
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String, nullable=False)
+    frequency = Column(Integer, nullable=False)
+
+
 # class User_Keyword(Base):
 #     __tablename__ = "user_keywords"
 #     id = Column(Integer, primary_key=True, nullable=False)

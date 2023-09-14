@@ -1,5 +1,6 @@
-from fastapi import FastAPI 
-from .routers import  users ,auth , search ,jobs
+from fastapi import FastAPI
+
+from .routers import users, auth, search, jobs, skills
 from fastapi.middleware.cors import CORSMiddleware
 
 # models.Base.metadata.create_all(bind=engine)
@@ -18,10 +19,10 @@ app.include_router(users.router)
 app.include_router(auth.router)
 app.include_router(search.router)
 app.include_router(jobs.router)
+app.include_router(skills.router)
 # app.include_router(votes.router)
 
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-

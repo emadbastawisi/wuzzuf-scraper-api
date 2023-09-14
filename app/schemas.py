@@ -210,3 +210,8 @@ class Url(BaseModel):
 
 class Password(BaseModel):
     password: str
+
+
+class skill(BaseModel):
+    name: str
+    frequency: int
