@@ -109,7 +109,7 @@ def get_job_info(job: BeautifulSoup) -> schemas.JobCreate:
         expired_at = get_expired_at(created_at)
 
         result = {'title': job_title, 'company': job_company, 'location': job_location, 'type': job_type,
-                  'skills': job_skills,  'link': 'https://wuzzuf.net'+job_link, 'created_at': created_at, 'expired_at': expired_at}
+                  'skills': job_skills,  'link': job_link, 'created_at': created_at, 'expired_at': expired_at}
         return result
     except:
         return None
